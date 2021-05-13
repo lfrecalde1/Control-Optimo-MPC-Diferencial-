@@ -2,9 +2,9 @@
 %XXXXXXXXXXXXXXXXXXXCONTROL DE TRAYECTORIA DE UNA PLATAFORMA MOVILXXXXXXXXXXXXXXXXXX
 %XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 %% PARAMETROS DE TIEMPO
-clc,clear all,close all;
+clc,close all,clear all;
 ts=0.1;
-tfinal=50;
+tfinal=10;
 to=0;
 t=[to:ts:tfinal+ts];
 load('DINAMICA_PLATAFORMA.mat');
@@ -41,7 +41,7 @@ hydp=-1*0.3*sin(0.3*t);
 hd=[hxd;hyd];
 
 %% Este valor cambiar si desea cambiar el horizonte de predciccion si se aumenta se demora mas optimizando
-N=4;
+N=20;
 
 %% RESTRICCION PARA LAS ACCIONES DE CONTROL
 lb = [-0.5,-2.5]';
@@ -54,8 +54,12 @@ for index=1:N-1
 end
 
 %% CONFIGURACION DEL METODO DE OPTIMIZACION A UTILIZAR
-options = optimset('Algorithm','sqp','Display','off');
-
+solver='fmincon';
+b='Display';
+c='off';
+d='Algorithm';
+e='sqp';
+options=optimoptions(solver,b,c,d,e);
 
 %% generacion de la solucion iniciale del sistema
 z0=[u(1)*ones(1,N-1);...
@@ -71,7 +75,7 @@ Q=1;
 R=0.0005; %% Si se aumenta esa las acciones de control son mas suaves para puede que no se llega a erroes de cero
 
 %% bandera para objetos
-bandera=0;  %% 0 sin objetos 1 con objetos
+bandera=1;  %% 0 sin objetos 1 con objetos
 for k=1:length(t)-N
     tic;
     hxe(k)=hxd(k)-hx(k);
@@ -87,8 +91,9 @@ for k=1:length(t)-N
 
      
      %% CONTROLADOR BASADO EN OPTIMIZACION
-     f_obj = @(z) movil_optimo_2(z,Q,R,hd,h,q,l,ts,N,k,v_real,x,Obj,bandera);
-     qref = fmincon(f_obj,z0,[],[],[],[],LB,UB,[],options);
+%      f_obj = @(z) movil_optimo_2(z,Q,R,hd,h,q,l,ts,N,k,v_real,x,Obj,bandera);
+%      qref = fmincon(f_obj,z0,[],[],[],[],LB,UB,[],options);
+     [qref] = MPC(z0,Q,R,hd,h,q,l,ts,N,k,v_real,x,Obj,bandera,LB,UB,options);
  
      %% VELOCIDADES CINEMATICAS O VELOCIDADES DESEADAS PARA EL BLOQUE DE COMPENSACI�N DIN�MICA
      uref_c(k)=qref(1,1);

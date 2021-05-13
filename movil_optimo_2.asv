@@ -14,9 +14,6 @@ L= zeros(N*2,1);
 
 L(1:2,1)=Fun(hd(:,1),h(:,1));
 
-u= zeros(1,N);
-w= zeros(1,N);
-
 u(1)=vreal(1);
 
 w(1)=vreal(2);
@@ -71,9 +68,11 @@ for i=1:N-1
     
     th(i+1) = th(i)+v(2)*ts;
     
+    
     L(aux1:(aux1+1),1)=(Fun(hd(:,k+i),h(:,i+1)));
     
-    Fuerza(aux2:(aux2+2),1)=evasion(obj,h(:,i+1),r,b);
+    
+    Fuerza=[Fuerza;evasion(obj,h(:,i+1),r,b)];
     
     aux1=aux1+control_size(1);
     
@@ -85,7 +84,7 @@ size(Fuerza);
 %% Generacion de las matrices de ponderacion
 Q=Q*eye(length(L));
 R = R*eye(length(VC));
-P = 0.08*eye(length(Fuerza));
+P = 0.008*eye(length(Fuerza));
 
 %% Generaion de las funciones objetivo incluido objetos
 %f=1*L'*Q*L+VC'*R*VC+Fuerza*P*Fuerza';
@@ -101,10 +100,15 @@ end
 
 end
 function [F] = Fun(hd,h)
-%Peso de errores de posici�n
+alpha=1;    %Peso de errores de posici�n
 he = hd-h;    %Errores de control
 %     F = alpha*he'*H*he
 F=he;
+end
+
+function [U] = delta(delta_u)
+beta = 0.1;    %Peso de errores de posici�n
+U = delta_u;
 end
 function [obstaculo]=evasion(obj,h,r,b)
 beta=1;
